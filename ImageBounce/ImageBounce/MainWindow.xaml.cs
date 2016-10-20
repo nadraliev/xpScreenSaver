@@ -1,4 +1,5 @@
-﻿using System;
+﻿using WpfAnimatedGif;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,8 @@ using System.Windows.Shapes;
 
 namespace ImageBounce
 {
+
+    using Winforms = System.Windows.Forms;
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -24,6 +27,10 @@ namespace ImageBounce
         public MainWindow()
         {
             InitializeComponent();
+            this.Width = SystemParameters.VirtualScreenWidth;
+            this.Height = SystemParameters.VirtualScreenHeight;
+            this.Left = 0;
+            this.Top = 0;
         }
 
 
@@ -42,22 +49,30 @@ namespace ImageBounce
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            
-            BitmapImage bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri("image.jpg", UriKind.Relative);
-            bitmap.EndInit();
 
-            im = new Image();
-            im.Source = bitmap;
-            im.Margin = new Thickness(0, y(0), 0, 0);
-            im.Stretch = Stretch.None;
-            canvas.Children.Add(im);
+            Winforms.OpenFileDialog openFileDialog = new Winforms.OpenFileDialog();
+            openFileDialog.Filter = "Image Files(*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
+            openFileDialog.FilterIndex = 2;
+            if (openFileDialog.ShowDialog() == Winforms.DialogResult.OK)
+            {
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(openFileDialog.FileName, UriKind.Absolute);
+                bitmap.EndInit();
 
-            im.Loaded += Im_Loaded;
+                im = new Image();
 
+                //im.Source = bitmap;
+                ImageBehavior.SetAnimatedSource(im,bitmap);
 
-            
+                im.Margin = new Thickness(0, 0, 0, 0);
+
+                im.MaxHeight = 300;
+                im.MaxWidth = 300;
+                canvas.Children.Add(im);
+
+                im.Loaded += Im_Loaded;
+            }
             
         }
 
