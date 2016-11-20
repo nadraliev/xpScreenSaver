@@ -1,4 +1,4 @@
-﻿using WpfAnimatedGif;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,11 +36,11 @@ namespace ImageBounce
 
 
         ThicknessAnimation animation;
-        Image im;
+        
 
         public double y(double x)
         {
-            return k*x + b;
+            return k * x + b;   //change movement path
         }
 
         double offset = 2;
@@ -49,12 +49,20 @@ namespace ImageBounce
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-
+            Image im;
             Winforms.OpenFileDialog openFileDialog = new Winforms.OpenFileDialog();
             openFileDialog.Filter = "Image Files(*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
             openFileDialog.FilterIndex = 2;
-            if (openFileDialog.ShowDialog() == Winforms.DialogResult.OK)
+            var result = openFileDialog.ShowDialog();
+            if (result == Winforms.DialogResult.OK)
             {
+
+                canvas.Children.Clear();
+                if (animation != null)
+                    animation.Freeze();
+                k = 2;
+                b = -1;
+
                 BitmapImage bitmap = new BitmapImage();
                 bitmap.BeginInit();
                 bitmap.UriSource = new Uri(openFileDialog.FileName, UriKind.Absolute);
@@ -62,8 +70,7 @@ namespace ImageBounce
 
                 im = new Image();
 
-                //im.Source = bitmap;
-                ImageBehavior.SetAnimatedSource(im,bitmap);
+                im.Source = bitmap;
 
                 im.Margin = new Thickness(0, 0, 0, 0);
 
@@ -73,11 +80,12 @@ namespace ImageBounce
 
                 im.Loaded += Im_Loaded;
             }
-            
+
         }
 
         private void Im_Loaded(object sender, RoutedEventArgs e)
         {
+            Image im = (Image)canvas.Children[0];
             animation = new ThicknessAnimation();
             animation.To = new Thickness(im.Margin.Left + offset, y(im.Margin.Left + offset), 0, 0);
             animation.Duration = TimeSpan.FromTicks(1);
@@ -88,27 +96,31 @@ namespace ImageBounce
 
         private void Animation_Completed(object sender, EventArgs e)
         {
-            if (im.Margin.Left <= 0)
+            if (!animation.IsFrozen)
             {
-                k *= -1;
-                offset *= -1;
+                Image im = (Image)canvas.Children[0];
+                if (im.Margin.Left <= 0)
+                {
+                    k *= -1;
+                    offset *= -1;
+                }
+                if (im.Margin.Left >= canvas.ActualWidth - im.ActualWidth)
+                {
+                    k *= -1;
+                    offset *= -1;
+                }
+                if (im.Margin.Top <= 0)
+                {
+                    k *= -1;
+                }
+                if (im.Margin.Top >= canvas.ActualHeight - im.ActualHeight)
+                {
+                    k *= -1;
+                }
+                b = im.Margin.Top - im.Margin.Left * k;
+                animation.To = new Thickness(im.Margin.Left + offset, y(im.Margin.Left + offset), 0, 0);
+                im.BeginAnimation(MarginProperty, animation);
             }
-            if (im.Margin.Left >= canvas.ActualWidth - im.ActualWidth)
-            {
-                k *= -1;
-                offset *= -1;
-            }
-            if (im.Margin.Top <= 0)
-            {
-                k *= -1;
-            }
-            if (im.Margin.Top >= canvas.ActualHeight - im.ActualHeight)
-            {
-                k *= -1;
-            }
-            b = im.Margin.Top - im.Margin.Left * k;
-            animation.To = new Thickness(im.Margin.Left + offset, y(im.Margin.Left + offset), 0, 0);
-            im.BeginAnimation(MarginProperty, animation);
         }
     }
 }
